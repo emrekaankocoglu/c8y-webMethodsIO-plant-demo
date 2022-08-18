@@ -1,0 +1,12 @@
+#!/usr/bin/sh
+open="518,if-prod,OPEN"
+close="518,if-prod,CLOSED"
+if [ $1 = $open ];
+then
+sudo raspi-gpio set 16 op dh
+elif [ $1 = $close ];
+then
+sudo raspi-gpio set 16 op dl
+else
+echo "error"
+fi

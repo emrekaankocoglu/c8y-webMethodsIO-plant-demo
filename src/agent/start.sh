@@ -42,6 +42,11 @@ WorkingDirectory=$dir
 User=pi
 [Install]
 WantedBy=multi-user.target" > /lib/systemd/system/ifdeviceconnector.service
+sudo echo "[WEBMETHODS]
+url=
+webhook_key=
+device_name=" > wMioConfig.cfg
+sudo printf $deviceid >> wMioConfig.cfg
 sudo chmod 644 /lib/systemd/system/ifdeviceagent.service
 sudo chmod 644 /lib/systemd/system/ifdeviceconnector.service
 sudo systemctl daemon-reload

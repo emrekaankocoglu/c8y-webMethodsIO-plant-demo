@@ -1,0 +1,8 @@
+#!/usr/bin/sh
+
+mosquitto_pub -t c8y/s/us -m 501,c8y_Command
+sudo raspi-gpio set 16 op dh
+sleep 2
+sudo raspi-gpio set 16 op dl
+
+mosquitto_pub -t c8y/s/us -m 503,c8y_Command,$(var)

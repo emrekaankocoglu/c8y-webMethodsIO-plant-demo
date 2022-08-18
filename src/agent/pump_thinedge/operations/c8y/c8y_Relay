@@ -1,0 +1,4 @@
+[exec]
+  topic = "c8y/s/ds"
+  on_message = "518"
+  command = "/etc/tedge/operations/command_relay"
