@@ -1,17 +1,23 @@
 import json
+import requests
 import os
 import time
 import datetime
+import sys
 from checkConnection import *
+headers = {
+  'webhook_key': '',
+  'Content-Type': 'application/json'}
+headers['webhook_key']=sys.argv[3]
+dataString=""
 input=""
+url=sys.argv[2]
 ledStatus=0
-os.system('sudo sh -c "echo none > /sys/class/leds/led0/trigger"') #set built-in LED state to always off to gain control
+#os.system('sudo sh -c "echo none > /sys/class/leds/led0/trigger"') #set built-in LED state to always off to gain control
 template= {
+    "id":"",
     "time":"" , 
-    "temperature":"",
-    "light":"",  
-    "humidity":"" ,
-    "soilHumidity":""
+    "data":""
 }
 #template to fit into Thin Edge JSON format
 
@@ -26,20 +32,13 @@ def checkValidity():
             raise ValueError("Checksum failed")
         else:
             return measurementArray
-def convertLight(analogValue): #analog (0-1023) values to percentages converting block
-    if analogValue<500:
-        return 0
-    elif analogValue>1000:
-        return 100
-    else:
-        return (analogValue-500)/5
-def convertHumid(analogValue):
-    if analogValue>1000:
-        return 0
+def convertAnalog(analogValue): #analog (0-1023) values to percentages converting block
+    if analogValue>999:
+        return "999"
     elif analogValue<100:
-        return 100
+        return "0"+str(analogValue)
     else:
-        return (-analogValue+1000)/9
+        return str(analogValue)
 def fileHandler(): #fetch and send measurements from the folder to c8y
     dir_path = os.path.dirname(os.path.realpath(__file__))
     for files in os.listdir(dir_path):
@@ -56,15 +55,17 @@ def c8ySend(files):
     input=f.read().strip()
     valueArray=checkValidity()
     template["time"]=files[:-2]
-    template["temperature"]=int(valueArray[2])
-    template["humidity"]=int(valueArray[3])
-    template["soilHumidity"]=int(convertHumid(int(valueArray[1])))
-    template["light"]=int(convertLight(int(valueArray[0])))
+    template["id"]=sys.argv[1]
+    dataString=convertAnalog(int(valueArray[0]))+convertAnalog(int(valueArray[1]))+"0"+valueArray[2]+"0"+valueArray[3]
+    template["data"]=dataString
     payload=json.dumps(template)
-    os.system("tedge mqtt pub tedge/measurements '"+payload+"'" )
-while True:
-    if (checkConnection()):
-        os.system('sudo sh -c "echo '+str(-ledStatus)+' > /sys/class/leds/led0/brightness"') #switch the LED to indicate transfer
-        fileHandler()
-        ledStatus=~ledStatus
-    time.sleep(1)
+    print(payload)
+    response = requests.request("POST", url, headers=headers, data=payload)
+    print(response.status_code)
+if (__name__=="__main__"):
+    while True:
+        if (checkConnection()):
+            #os.system('sudo sh -c "echo '+str(-ledStatus)+' > /sys/class/leds/led0/brightness"') #switch the LED to indicate transfer
+            fileHandler()
+            ledStatus=~ledStatus
+        time.sleep(1)
