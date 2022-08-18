@@ -4,16 +4,20 @@ import os
 import time
 import datetime
 import sys
+import configparser
 from checkConnection import *
+config = configparser.RawConfigParser()
+config.read('wMioConfig.cfg')
+wMconfDict = dict(config.items('WEBMETHODS'))
+url=wMconfDict["url"]
 headers = {
   'webhook_key': '',
   'Content-Type': 'application/json'}
-headers['webhook_key']=sys.argv[3]
+headers['webhook_key']=wMconfDict["webhook_key"]
 dataString=""
 input=""
-url=sys.argv[2]
 ledStatus=0
-#os.system('sudo sh -c "echo none > /sys/class/leds/led0/trigger"') #set built-in LED state to always off to gain control
+os.system('sudo sh -c "echo none > /sys/class/leds/led0/trigger"') #set built-in LED state to always off to gain control
 template= {
     "id":"",
     "time":"" , 
@@ -55,17 +59,15 @@ def c8ySend(files):
     input=f.read().strip()
     valueArray=checkValidity()
     template["time"]=files[:-2]
-    template["id"]=sys.argv[1]
+    template["id"]=wMconfDict["device_name"]
     dataString=convertAnalog(int(valueArray[0]))+convertAnalog(int(valueArray[1]))+"0"+valueArray[2]+"0"+valueArray[3]
     template["data"]=dataString
     payload=json.dumps(template)
-    print(payload)
     response = requests.request("POST", url, headers=headers, data=payload)
-    print(response.status_code)
 if (__name__=="__main__"):
     while True:
         if (checkConnection()):
-            #os.system('sudo sh -c "echo '+str(-ledStatus)+' > /sys/class/leds/led0/brightness"') #switch the LED to indicate transfer
+            os.system('sudo sh -c "echo '+str(-ledStatus)+' > /sys/class/leds/led0/brightness"') #switch the LED to indicate transfer
             fileHandler()
             ledStatus=~ledStatus
         time.sleep(1)
