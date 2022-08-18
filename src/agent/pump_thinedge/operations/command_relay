@@ -1,6 +1,7 @@
 #!/usr/bin/sh
 open="518,if-prod,OPEN"
 close="518,if-prod,CLOSED"
+mosquitto_pub -t c8y/s/us -m 501,c8y_Relay
 if [ $1 = $open ];
 then
 sudo raspi-gpio set 16 op dh
@@ -10,3 +11,4 @@ sudo raspi-gpio set 16 op dl
 else
 echo "error"
 fi
+mosquitto_pub -t c8y/s/us -m 503,c8y_Relay,
